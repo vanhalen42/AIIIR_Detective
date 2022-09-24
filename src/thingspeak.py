@@ -10,7 +10,7 @@ import datetime
 import pandas as pd
 from adtk.data import validate_series
 from adtk.visualization import plot
-from adtk.detector import QuantileAD, OutlierDetector, SeasonalAD
+from adtk.detector import QuantileAD, OutlierDetector, SeasonalAD,InterQuartileRangeAD,LevelShiftAD,PersistAD
 from sklearn.neighbors import LocalOutlierFactor
 import matplotlib as mpl
 from notification import send_email,send_plot
@@ -162,11 +162,12 @@ def outlier_detection(field,key):
         s_train = validate_series(s_train)
         nneigh = min(len(field)-1,1000)
         # outlier_detector = OutlierDetector(LocalOutlierFactor(contamination=0.05, n_neighbors=nneigh))
-        outlier_detector = QuantileAD(low=0.05,high=0.95)
-        # outlier_detector = SeasonalAD()
+        outlier_detector = QuantileAD(low=0.01,high=0.99)
+        # outlier_detector = InterQuartileRangeAD(c=1.5)
+        # outlier_detector = PersistAD()
         anomalies = outlier_detector.fit_detect(s_train)
         anomalies_np = anomalies.to_numpy()
-        num_anomalies = anomalies_np[:,-1].sum()
+        num_anomalies = anomalies_np.sum()
         plot(s_train, anomaly=anomalies, ts_linewidth=1, ts_markersize=3, anomaly_color='red',
             anomaly_alpha=0.3, curve_group='all')
         # plt.show()
@@ -249,9 +250,9 @@ def notify(field):
 
         
 
-    print(email_text)
-    print(markdown_text)
-    # telegram_alert(field)
+    # print(email_text)
+    # print(markdown_text)
+    telegram_alert(field)
     # telegram_notify('registered_users.json',markdown_text)
     # send_doc()
     # send_email(email_text)
