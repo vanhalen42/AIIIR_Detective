@@ -13,35 +13,8 @@ load_dotenv()
 updater = Updater(os.getenv("BOT_TOKEN"),
                   use_context=True)
 
-files_to_send=[join('plots',file,f) for file in os.listdir('plots') for f in os.listdir(join('plots',file))]
 recipients=set()
-
-          
-            
-def send_plot(sensor_name,plot_type,json_file):
-    """
-    Helper function to send a plot to telegram.
-    Args:
-        sensor_name: The name of the sensor to send the plot for.
-        plot_type: The type of plot to send.
-        json_file: The name of the json file containing the telegram chat ids to send the plot to.
-    """
-    with open(json_file, 'r') as f:
-        data = json.load(f)
-    dirpath = './output'
-    fname = []
-    for root,d_names,f_names in os.walk(dirpath):
-        for f in f_names:
-            fname.append(os.path.join(root, f))
-    for file in fname:
-        if (sensor_name in file) and (plot_type in file):
-            for chat_id in data['registered_chat_ids']:
-                try:
-                    files_to_send.append(file)
-                    updater.bot.send_photo(chat_id=chat_id, photo=open(file, 'rb'),caption = sensor_name+":"+"\n"+""+plot_type+" plot")
-                except:
-                    print("Error sending document to chat_id: "+str(chat_id))
-            
+         
 
 def notify(json_file,markdown_file):
     """
@@ -72,6 +45,7 @@ def send_email(email_text):
     ]
     # contents.extend(f'./{files_to_send}')
     configure_recipients()
+    files_to_send=[join('plots',file,f) for file in os.listdir('plots') for f in os.listdir(join('plots',file))]
     unique_recipients=list(recipients)
     print("Recipients: ")
     for i in range(len(unique_recipients)):  

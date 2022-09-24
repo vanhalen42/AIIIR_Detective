@@ -13,7 +13,8 @@ from adtk.visualization import plot
 from adtk.detector import QuantileAD, OutlierDetector, SeasonalAD,InterQuartileRangeAD,LevelShiftAD,PersistAD
 from sklearn.neighbors import LocalOutlierFactor
 import matplotlib as mpl
-from notification import send_email,send_plot
+from forecast import forecast
+from notification import send_email
 from notification import notify as telegram_notify
 from dotenv import load_dotenv
 load_dotenv()
@@ -180,8 +181,8 @@ def outlier_detection(field,key):
     
     return num_anomalies
 
-def thingspeak_read_actual():
-    num_results = 5000
+def thingspeak_read_actual(datapoints = 5000):
+    num_results = datapoints
     url = f'''https://thingspeak.com/channels/{CHANNEL_ID}/feed.json?results={num_results}?api_key={READ_API_KEY}''' 
     response = requests.get(url=url)
     print('Data Fetched')
@@ -233,8 +234,8 @@ def notify(field):
         if gap > max_gap:
             max_gap = gap
             max_gap_key = data_fields[key]
-    markdown_text += f'''*Maximum gap between two consecutive datapoints: {max_gap} in {max_gap_key}*\n\n'''
-    email_text += f'''Maximum gap between two consecutive datapoints: {max_gap} in {max_gap_key}\n\n'''
+    markdown_text += f'''*Maximum gap between two consecutive datapoints: {max_gap}s in {max_gap_key}*\n\n'''
+    email_text += f'''Maximum gap between two consecutive datapoints: {max_gap}s in {max_gap_key}\n\n'''
 
     # outlier detection
     max_outliers = 0
@@ -246,17 +247,16 @@ def notify(field):
             max_outliers_key = data_fields[key]
     markdown_text += f'''*Maximum number of anomalies: {max_outliers} in {max_outliers_key}*\n\n'''
     email_text += f'''Maximum number of anomalies: {max_outliers} in {max_outliers_key}\n\n'''
-
-
-        
-
-    # print(email_text)
-    # print(markdown_text)
-    telegram_alert(field)
-    # telegram_notify('registered_users.json',markdown_text)
-    # send_doc()
-    # send_email(email_text)
+    forecast(field)
+    send_email(email_text)
     # send_plot()
+def sentry():
+    while True:
+        # thingspeak_read_actual()
+        fields,_ = load_data()
+        telegram_alert(fields)
+        time.sleep(300)
+
 
 def telegram_alert(fields):
     # read alert_config.json
@@ -278,21 +278,15 @@ def telegram_alert(fields):
         
 
 def master():
+    print("AIIIR")
+    # make menu
+    option1 = input('1. Daily Summary + Analysis\n2. Sentry Mode\n')
+
+    if option1 == '2':
+        sentry()
+
     # thingspeak_read_actual()
     fields,nan_num = load_data()
-    # print(fields)
-    os.makedirs('./plots',exist_ok=True)
-    key = 'field2'
-    # for key in fields.keys():
-    #     remove_zeros = False
-    #     if key == 'field3' or key == 'field6':
-    #         remove_zeros = True
-    #     non_nan = remove_nans(fields[key],remove_zeros=remove_zeros)
-    #     nan_analysis(nan_num)
-    #     freq_analysis(non_nan,key=data_fields[key].replace(' ','_'))
-    #     outlier_detection(non_nan,key=data_fields[key].replace(' ','_'))
-    #     # print(fields[key])
-
     notify(fields)
 
 
