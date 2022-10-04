@@ -1,9 +1,7 @@
-#define TS_ENABLE_SSL // For HTTPS SSL connection
-
 #include "Adafruit_SHT4x.h"
 #include "PubSubClient.h"
 #include "Adafruit_SGP40.h"
-#include <WiFiClientSecure.h>
+#include "WiFi.h"
 #include "ThingSpeak.h"
 #include "HTTPClient.h"
 #include "time.h"
@@ -12,8 +10,8 @@
 //
 //#define WIFI_SSID "LANofTheFree"
 //#define WIFI_PASS "Yashification9"
-char WIFI_SSID[] = "AndroidAP";   // your network SSID (name) 
-char WIFI_PASS[] = "aaron@monis";   // your network password
+char WIFI_SSID[] = "Airtel-My WIFI-BMF422-B233";   // your network SSID (name) 
+char WIFI_PASS[] = "31e76e81";   // your network password
 const char *server = "mqtt3.thingspeak.com";
 char mqttUserName[] = "BwUMIQoAPAAdAw4RDCczCSc";
 char mqttPass[] = "7sMniNbk3BvZR2iSCox27Wr6";
@@ -31,18 +29,22 @@ String cnt3 = "Node-4/Data";
 String cnt4 = "Node-5/Data";
 String cnt5 = "Node-6/Data";
 
-WiFiClientSecure  client;
+WiFiClient client;
 // PubSubClient mqttClient(espClient);
 
 WiFiServer server1(80);
 
 void ConnectToWifi(){
-  WiFi.mode(WIFI_STA);
+  int timeout_counter = 0;
   WiFi.begin(WIFI_SSID,WIFI_PASS);
   int start = millis();
   while(WiFi.status() != WL_CONNECTED){
     Serial.print(".");
-    delay(100);
+    if(timeout_counter >= 50){
+        ESP.restart();
+    }
+    timeout_counter++;
+    delay(200);
   }
 }
 
